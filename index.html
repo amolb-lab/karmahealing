@@ -9,8 +9,8 @@
 <meta name="apple-mobile-web-app-title" content="Karma Healing">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Karma Healing Meditation</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -106,7 +106,7 @@ input[type=checkbox] { accent-color: var(--gold); width: 18px; height: 18px; }
 </head>
 <body>
 <canvas id="stars" aria-hidden="true"></canvas>
-<audio id="player" src="audio/session.mp3" preload="auto" playsinline></audio>
+<audio id="player" src="session.mp3" preload="auto" playsinline></audio>
 <main>
   <header class="hero" id="hero">
     <div class="eyebrow">Karma healing</div>
@@ -142,12 +142,11 @@ input[type=checkbox] { accent-color: var(--gold); width: 18px; height: 18px; }
   <section class="path" id="path">
     <h2>The path</h2>
   </section>
-  <p class="credit">Based on the session "What is Karma Healing really?" by Karma Rising | Ritika Bhagya. The narration is an AI-generated voice.</p>
 </main>
 <script>
 (function () {
   "use strict";
-  /* ---------- Content (display only; all sound is in audio/session.mp3) ---------- */
+  /* ---------- Content (display only; all sound is in session.mp3) ---------- */
   var CH = [
     { id:"root", announce:"We begin by chanting Lum, the seed mantra of the root chakra. We will chant it three times.", name:"Root Chakra", sa:"Muladhara", place:"Base of the spine", deity:"Ganesha",
       release:"inherited and personal fear and survival anxiety", color:"#e5484d",
@@ -252,7 +251,7 @@ input[type=checkbox] { accent-color: var(--gold); width: 18px; height: 18px; }
     var t = audio.currentTime || 0;
     var si = stageAt(t); if (si !== curStage) setStage(si);
     var c = lastAt(cev, t), ct = c ? c[2] : ""; if (ct !== lastCue) { lastCue = ct; elCue.textContent = ct; }
-    var p = lastAt(pev, t), pt = p ? p[2] : ""; if (pt !== lastCap) { lastCap = pt; elCap.textContent = pt; }
+    var p = lastAt(pev, t), pt = p ? p[2] : ""; if (typeof errMsg !== "undefined" && errMsg) { elCap.textContent = errMsg; lastCap = null; } else if (pt !== lastCap) { lastCap = pt; elCap.textContent = pt; }
     elBar.style.width = Math.min(100, t / EV.end * 100) + "%";
     elTime.textContent = fmt(t) + " / " + fmt(EV.end);
   }
@@ -274,7 +273,7 @@ input[type=checkbox] { accent-color: var(--gold); width: 18px; height: 18px; }
     window.scrollTo({ top: 0, behavior: "smooth" }); update();
   }
   $("start").addEventListener("click", function () { startPlay(0); });
-  $("pause").addEventListener("click", function () { if (audio.paused) audio.play().catch(function () {}); else audio.pause(); });
+  $("pause").addEventListener("click", function () { if ($("pause").textContent === "Retry") { triedBlob = false; stall = 0; loadAsBlob(); return; } if (audio.paused) audio.play().catch(function () {}); else audio.pause(); });
   $("skip").addEventListener("click", function () { if (running) seekStage(curStage + 1); });
   $("end").addEventListener("click", function () {
     if (finished) { startPlay(0); return; }
@@ -285,7 +284,7 @@ input[type=checkbox] { accent-color: var(--gold); width: 18px; height: 18px; }
   audio.addEventListener("play", function () { $("pause").textContent = "Pause"; lockOn(); });
   audio.addEventListener("pause", function () { if (!audio.ended) $("pause").textContent = "Resume"; lockOff(); });
   audio.addEventListener("waiting", function () { elSub.textContent = "Loading audio…"; });
-  audio.addEventListener("playing", function () { if (curStage >= 0) elSub.textContent = STAGES[curStage].sub; });
+  audio.addEventListener("playing", function () { errMsg = ""; lastCap = null; if (curStage >= 0) elSub.textContent = STAGES[curStage].sub; });
   audio.addEventListener("ended", function () {
     finished = true; lockOff(); curIdx = -1; update();
     elCue.textContent = ""; elTitle.textContent = "Practice complete"; elSub.textContent = "Sit quietly for as long as you like.";
@@ -294,6 +293,29 @@ input[type=checkbox] { accent-color: var(--gold); width: 18px; height: 18px; }
     $("pause").classList.add("hidden"); $("skip").classList.add("hidden"); $("end").textContent = "Start again";
     Array.prototype.forEach.call(elDots.children, function (d) { d.className = d.className.replace(" on", "") + " done"; });
   });
+  // If the audio does not load or start, say so and retry once by downloading the file first.
+  var triedBlob = false, stall = 0;
+  var errMsg = "";
+  function audioFail(msg) { errMsg = msg; elSub.textContent = "Audio problem"; elCap.textContent = msg; $("pause").textContent = "Retry"; }
+  function loadAsBlob() {
+    triedBlob = true; elSub.textContent = "Loading audio…";
+    fetch("session.mp3", { cache: "reload" }).then(function (r) {
+      if (!r.ok) throw new Error("file not found, code " + r.status);
+      return r.blob();
+    }).then(function (b) {
+      if (b.size < 1000000) throw new Error("file is incomplete (" + b.size + " bytes)");
+      var t = audio.currentTime || 0; audio.src = URL.createObjectURL(b); audio.load(); audio.currentTime = t;
+      if (running && !finished) audio.play().catch(function () { audioFail("Tap Retry to start the audio."); });
+    }).catch(function (e) {
+      audioFail("The audio could not be loaded: " + e.message + ". Check that session.mp3 is in your GitHub repository, about 11 MB, then reload.");
+    });
+  }
+  audio.addEventListener("error", function () { if (!running) return; if (!triedBlob) loadAsBlob(); else audioFail("The audio could not be played. Reload the app and try again."); });
+  setInterval(function () {
+    if (running && !finished && !audio.paused && (audio.currentTime || 0) < 0.1) stall++; else stall = 0;
+    if (stall === 7 && !triedBlob) loadAsBlob();
+    else if (stall === 20) audioFail("The audio is not starting. Check that session.mp3 is in your GitHub repository, about 11 MB, then reload.");
+  }, 1000);
   // lock screen / notification controls
   try {
     if ("mediaSession" in navigator) {

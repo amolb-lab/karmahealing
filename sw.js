@@ -1,8 +1,8 @@
 // Offline cache for Karma Healing Meditation. Bump VERSION when you change any file.
-const VERSION = "v1";
+const VERSION = "v4";
 const CACHE = "karma-healing-" + VERSION;
-const FILES = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png",
-  "icons/maskable-512.png", "icons/apple-touch-icon.png", "icons/favicon-48.png", "audio/session.mp3"];
+const FILES = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png",
+  "maskable-512.png", "apple-touch-icon.png", "favicon-48.png", "session.mp3"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
