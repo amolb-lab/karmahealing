@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0920">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Karma Healing">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Karma Healing Meditation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Figtree:wght@400;500;600&family=Noto+Serif+Devanagari:wght@500&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: one centered column. A breathing mandala is the focus; the spoken line and controls sit beneath it. */
+:root {
+  --bg: #0b0920;
+  --bg2: #15113a;
+  --ink: #f1ebdc;
+  --muted: #a9a3c6;
+  --gold: #e3b96a;
+  --c: #e3b96a;
+  --line: rgba(227,185,106,.22);
+  --display: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --deva: "Noto Serif Devanagari", "Noto Sans Devanagari", serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: radial-gradient(120% 80% at 50% 0%, var(--bg2) 0%, var(--bg) 60%) fixed, var(--bg);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+#stars { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+main { padding-top: max(24px, env(safe-area-inset-top)) !important; position: relative; z-index: 1; max-width: 640px; margin: 0 auto; padding: 24px 18px 56px; display: flex; flex-direction: column; gap: 20px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 500; text-wrap: balance; margin: 0; }
+.hero { text-align: center; display: flex; flex-direction: column; gap: 10px; padding-top: 6px; }
+.eyebrow { font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); }
+h1 { font-size: clamp(34px, 9vw, 52px); line-height: 1.05; }
+.lede { color: var(--muted); max-width: 46ch; margin: 0 auto; }
+
+.stage { position: relative; width: min(100%, 440px); aspect-ratio: 1; margin: 0 auto; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.glyph {
+  position: absolute; inset: 0; display: grid; place-items: center; text-align: center; pointer-events: none;
+}
+.glyph .sym { font-family: var(--deva); font-size: clamp(48px, 15vw, 76px); line-height: 1; color: var(--c); text-shadow: 0 0 28px var(--c); transition: color .8s; }
+.glyph .rom { font-family: var(--display); font-size: 20px; letter-spacing: .18em; color: var(--ink); opacity: .85; margin-top: 4px; min-height: 28px; }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.btn-start {
+  align-self: center; border: 1px solid var(--gold); background: linear-gradient(180deg, rgba(227,185,106,.25), rgba(227,185,106,.08));
+  color: var(--ink); font-family: var(--display); font-size: 24px; font-weight: 600; letter-spacing: .04em;
+  padding: 14px 40px; border-radius: 999px; min-height: 52px; box-shadow: 0 0 40px rgba(227,185,106,.18);
+  transition: transform .2s, box-shadow .2s;
+}
+.btn-start:hover { transform: translateY(-1px); box-shadow: 0 0 56px rgba(227,185,106,.3); }
+.hint { text-align: center; font-size: 13px; color: var(--muted); margin-top: -8px; }
+
+.hidden { display: none !important; }
+
+#session { display: flex; flex-direction: column; gap: 14px; align-items: center; text-align: center; }
+.dots { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.dot { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--dc, var(--gold)); background: transparent; padding: 0; transition: all .5s; opacity: .55; }
+.dot.small { width: 9px; height: 9px; }
+.dot.done { background: var(--dc, var(--gold)); opacity: .5; }
+.dot.on { background: var(--dc, var(--gold)); opacity: 1; box-shadow: 0 0 14px var(--dc, var(--gold)); transform: scale(1.25); }
+.title { font-size: clamp(26px, 7vw, 34px); color: var(--c); transition: color .8s; }
+.sub { color: var(--muted); font-size: 14px; letter-spacing: .04em; margin-top: -8px; }
+.cue { font-family: var(--display); font-size: clamp(30px, 9vw, 44px); min-height: 1.2em; letter-spacing: .06em; }
+.caption { min-height: 6.2em; max-width: 46ch; font-size: 17px; color: var(--ink); opacity: .92; transition: opacity .6s; }
+.controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.ctl { border: 1px solid var(--line); background: rgba(255,255,255,.04); border-radius: 999px; padding: 10px 20px; min-height: 44px; font-size: 15px; }
+.ctl:hover { border-color: var(--gold); }
+.settings { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; align-items: center; color: var(--muted); font-size: 14px; }
+.settings label { display: flex; align-items: center; gap: 10px; }
+input[type=range] { accent-color: var(--gold); width: 130px; }
+select { background: rgba(255,255,255,.06); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 14px; }
+select option { color: #111; }
+input[type=checkbox] { accent-color: var(--gold); width: 18px; height: 18px; }
+
+.path { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--line); }
+.path h2 { font-size: 26px; padding: 22px 0 6px; }
+.row { display: grid; grid-template-columns: 14px 1fr auto; gap: 14px; align-items: start; padding: 14px 0; border-bottom: 1px solid var(--line); background: none; border-left: 0; border-right: 0; border-top: 0; text-align: left; width: 100%; }
+.row .sw { width: 12px; height: 12px; border-radius: 50%; background: var(--dc); margin-top: 7px; box-shadow: 0 0 12px var(--dc); }
+.row .nm { font-family: var(--display); font-size: 21px; line-height: 1.2; }
+.row .ds { font-size: 14px; color: var(--muted); }
+.row .mt { font-family: var(--display); font-size: 22px; color: var(--dc); letter-spacing: .08em; text-align: right; }
+.row .mt small { display: block; font-family: var(--body); font-size: 12px; color: var(--muted); letter-spacing: .02em; }
+.credit { font-size: 13px; color: var(--muted); text-align: center; }
+@media (prefers-reduced-motion: reduce) { .btn-start, .dot { transition: none; } }
+.bar { width: min(100%, 360px); height: 4px; background: rgba(255,255,255,.12); border-radius: 4px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--c); transition: background .8s; }
+.time { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; min-height: 1.4em; }
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+<audio id="player" src="audio/session.mp3" preload="auto" playsinline></audio>
+<main>
+  <header class="hero" id="hero">
+    <div class="eyebrow">Karma healing</div>
+    <h1>Seven chakras, base to crown</h1>
+    <p class="lede">A guided chant meditation. A calm voice leads each stage and tells you what to chant. About 19 minutes. The audio keeps playing when your screen locks.</p>
+  </header>
+
+  <section class="stage" aria-label="Chakra mandala">
+    <canvas id="mandala"></canvas>
+    <div class="glyph"><div><div class="sym" id="sym">ॐ</div><div class="rom" id="rom"></div></div></div>
+  </section>
+
+  <section id="idle" style="display:flex;flex-direction:column;gap:18px;">
+    <button class="btn-start" id="start" type="button">Start meditation</button>
+    <div class="hint">Turn your sound up and use headphones if you can. Sit somewhere quiet.</div>
+  </section>
+
+  <section id="session" class="hidden" aria-live="polite">
+    <div class="dots" id="dots"></div>
+    <h2 class="title" id="title"></h2>
+    <div class="sub" id="sub"></div>
+    <div class="cue" id="cue"></div>
+    <p class="caption" id="caption"></p>
+    <div class="bar"><i id="barfill"></i></div>
+    <div class="time" id="time"></div>
+    <div class="controls">
+      <button class="ctl" id="pause" type="button">Pause</button>
+      <button class="ctl" id="skip" type="button">Next stage</button>
+      <button class="ctl" id="end" type="button">End</button>
+    </div>
+  </section>
+
+  <section class="path" id="path">
+    <h2>The path</h2>
+  </section>
+  <p class="credit">Based on the session "What is Karma Healing really?" by Karma Rising | Ritika Bhagya. The narration is an AI-generated voice.</p>
+</main>
+<script>
+(function () {
+  "use strict";
+  /* ---------- Content (display only; all sound is in audio/session.mp3) ---------- */
+  var CH = [
+    { id:"root", announce:"We begin by chanting Lum, the seed mantra of the root chakra. We will chant it three times.", name:"Root Chakra", sa:"Muladhara", place:"Base of the spine", deity:"Ganesha",
+      release:"inherited and personal fear and survival anxiety", color:"#e5484d",
+      sym:"लं", mantra:"LAM", say:"Lum", hz:98, petals:4, dur:9,
+      vowels:[["u",1]], end:"m",
+      intro:"In this stage, we will work on the root chakra, Muladhara, at the base of the spine. Ganesha watches over this centre. Here we release inherited and personal fear, and survival anxiety. Visualize the fear leaving through your feet, into the earth, as gray smoke.",
+      tech:"Drop your pitch to the lowest comfortable spot in your chest. Keep your jaw loose, and send a heavy vibration down into the base of the spine." },
+    { id:"sacral", announce:"Next, we will chant Vum, the seed mantra of the sacral chakra, three times.", name:"Sacral Chakra", sa:"Svadhisthana", place:"Below the navel", deity:"Lakshmi",
+      release:"guilt and shame around desire, pleasure and receiving abundance", color:"#f08a3c",
+      sym:"वं", mantra:"VAM", say:"Vum", hz:110, petals:6, dur:9,
+      vowels:[["u",1]], end:"m",
+      intro:"In this stage, we will work on the sacral chakra, Svadhisthana, below the navel. Lakshmi governs this centre. Here we melt guilt and shame around desire, pleasure, and receiving abundance.",
+      tech:"Rest your palms open on your lap. Gently press your upper teeth onto your lower lip, to exaggerate the buzzing V sound, and direct the vibration down into your lower belly." },
+    { id:"solar", announce:"Next, we will chant Rum, the seed mantra of the solar plexus chakra, three times.", name:"Solar Plexus Chakra", sa:"Manipura", place:"Above the navel", deity:"Hanuman",
+      release:"powerlessness and people-pleasing, burned away by inner fire", color:"#f2c230",
+      sym:"रं", mantra:"RAM", say:"Rum", hz:123, petals:10, dur:9,
+      vowels:[["u",1]], end:"m",
+      intro:"In this stage, we will work on the solar plexus chakra, Manipura, above the navel. Hanuman is the deity here. Let the inner fire, Agni, burn away powerlessness and people-pleasing.",
+      tech:"Lightly roll the R against the roof of your mouth. Engage your diaphragm, and project a firmer breath, sending warmth into your upper belly." },
+    { id:"heart", announce:"Next, we will chant Yum, the seed mantra of the heart chakra, three times.", name:"Heart Chakra", sa:"Anahata", place:"Center of the chest", deity:"Ram and Sita",
+      release:"grief, hurt and resentment, dissolved through forgiveness", color:"#3fb871",
+      sym:"यं", mantra:"YAM", say:"Yum", hz:138.59, petals:12, dur:9,
+      vowels:[["u",1]], end:"m",
+      intro:"In this stage, we will work on the heart chakra, Anahata, at the center of the chest. Ram and Sita are the deities here. Let grief, hurt, and resentment dissolve through forgiveness.",
+      tech:"Keep the chest open and relaxed. Let the Y glide gently. Focus on softness rather than volume, and let the sound radiate outward from the heart." },
+    { id:"throat", announce:"Next, we will chant Hum, the seed mantra of the throat chakra, three times.", name:"Throat Chakra", sa:"Vishuddha", place:"Base of the throat", deity:"Saraswati",
+      release:"suppressed self-expression and fear of judgment", color:"#3da5f2",
+      sym:"हं", mantra:"HAM", say:"Hum", hz:147, petals:16, dur:9,
+      vowels:[["u",1]], end:"m",
+      intro:"In this stage, we will work on the throat chakra, Vishuddha, at the base of the throat. Saraswati is the deity here. Release suppressed self-expression, and the fear of being judged.",
+      tech:"Begin with a gentle, audible sigh on the H sound, to release tension in the throat. Then flow into the full chant." },
+    { id:"eye", announce:"Next, we will chant Aum, the sound of ah, oo, mm, which is the seed mantra of the third eye chakra. Three times.", name:"Third Eye Chakra", sa:"Ajna", place:"Between the eyebrows", deity:"Ardhanarishvara",
+      release:"the split between awareness and action, bringing clarity", color:"#6d63e8",
+      sym:"ॐ", mantra:"AUM", say:"Ah, oo, mm", hz:165, petals:2, dur:11,
+      vowels:[["a",.34],["u",.33],["o",.33]], end:"m",
+      intro:"In this stage, we will work on the third eye chakra, Ajna, between the eyebrows. Ardhanarishvara, half Shiva and half Shakti, is the deity here. Awareness and action become one, and clarity arrives.",
+      tech:"Feel the sound travel upward through your system. A vibrates in the belly. U rises through the chest and throat. M resonates in the head." },
+    { id:"crown", announce:"Finally, we will chant Om, once, ending in a nasal ong sound. This is the seed mantra of the crown chakra.", name:"Crown Chakra", sa:"Sahasrara", place:"Top of the head", deity:"Pure Shiva",
+      release:"all remaining karma, through surrender into silence", color:"#b57cf0",
+      sym:"ॐ", mantra:"OM", say:"Ong", hz:196, petals:24, dur:12, reps:1,
+      vowels:[["o",1]], end:"ng",
+      intro:"In this stage, we will work on the crown chakra, Sahasrara, at the top of the head. This is pure Shiva. Remaining karma dissolves here, through surrender into silence.",
+      tech:"Instead of closing your lips on an M, finish with a nasal N G sound, as in the word song. Let the vibration strike the top of your head, and dissolve directly into silence." }
+  ];
+
+  var EV = {"total":1134.52,"end":1128.52,"ev":[["s",0.0,0],["b",0.0,0,800,0.0],["p",0.0,"Welcome. Find a comfortable seat. Sit tall with a straight spine, either cross-legged, or in a chair with your feet flat on the floor."],["p",18.28,"Drop your shoulders. Soften your jaw and the muscles of your face. Feel the weight of your upper body resting on your hips."],["p",34.71,"Now take three deep breaths. Inhale through the nose, and exhale through the mouth."],["p",44.16,"Breath 1 of 3"],["c",44.16,"Breathe in"],["b",44.16,1,4000,0.0],["c",48.16,"Breathe out"],["b",48.16,0,6000,1.0],["p",54.16,"Breath 2 of 3"],["c",54.16,"Breathe in"],["b",54.16,1,4000,0.0],["c",58.16,"Breathe out"],["b",58.16,0,6000,1.0],["p",64.16,"Breath 3 of 3"],["c",64.16,"Breathe in"],["b",64.16,1,4000,0.0],["c",68.16,"Breathe out"],["b",68.16,0,6000,1.0],["c",74.16,""],["p",74.16,"Silently scan your body. Notice any tightness or heaviness. You don't need to change anything."],["p",95.81,"In this practice, stuck karmic energy, Shakti, held in the seven chakras, is dissolved so that it can rise and merge with pure consciousness, Shiva. We will move from the base of the spine to the crown. Each seed mantra is chanted three times, and the last one once."],["c",123.82,""],["b",123.82,0,2500,0.0],["p",123.82,""],["s",126.82,1],["b",126.82,0,800,0.0],["p",129.02,"In this stage, we will work on the root chakra, Muladhara, at the base of the spine. Ganesha watches over this centre. Here we release inherited and personal fear, and survival anxiety. Visualize the fear leaving through your feet, into the earth, as gray smoke."],["p",155.39,"We begin by chanting Lum, the seed mantra of the root chakra. We will chant it three times."],["p",166.84,"Drop your pitch to the lowest comfortable spot in your chest. Keep your jaw loose, and send a heavy vibration down into the base of the spine."],["p",181.98,"Now, chant along with me."],["p",185.59,"Chant LAM  \u00b7  say \u201cLum\u201d"],["c",186.79,"Breathe in"],["b",186.79,1,4200,0.0],["c",190.99,"LAM  1 of 3"],["b",190.99,0.1,9000,1.0],["c",199.99,"Rest"],["b",199.99,0,1500,0.1],["c",202.99,"Breathe in"],["b",202.99,1,4200,0.0],["c",207.19,"LAM  2 of 3"],["b",207.19,0.1,9000,1.0],["c",216.19,"Rest"],["b",216.19,0,1500,0.1],["c",219.19,"Breathe in"],["b",219.19,1,4200,0.0],["c",223.39,"LAM  3 of 3"],["b",223.39,0.1,9000,1.0],["c",232.39,"Rest"],["b",232.39,0,1500,0.1],["c",235.79,""],["p",235.79,"Feel the vibration settling. Notice what has softened."],["c",250.12,""],["b",250.12,0,2500,0.0],["p",250.12,""],["s",253.12,2],["b",253.12,0,800,0.0],["p",255.32,"In this stage, we will work on the sacral chakra, Svadhisthana, below the navel. Lakshmi governs this centre. Here we melt guilt and shame around desire, pleasure, and receiving abundance."],["p",274.93,"Next, we will chant Vum, the seed mantra of the sacral chakra, three times."],["p",284.78,"Rest your palms open on your lap. Gently press your upper teeth onto your lower lip, to exaggerate the buzzing V sound, and direct the vibration down into your lower belly."],["p",302.83,"Now, chant along with me."],["p",306.43,"Chant VAM  \u00b7  say \u201cVum\u201d"],["c",307.63,"Breathe in"],["b",307.63,1,4200,0.0],["c",311.83,"VAM  1 of 3"],["b",311.83,0.1,9000,1.0],["c",320.83,"Rest"],["b",320.83,0,1500,0.1],["c",323.83,"Breathe in"],["b",323.83,1,4200,0.0],["c",328.03,"VAM  2 of 3"],["b",328.03,0.1,9000,1.0],["c",337.03,"Rest"],["b",337.03,0,1500,0.1],["c",340.03,"Breathe in"],["b",340.03,1,4200,0.0],["c",344.23,"VAM  3 of 3"],["b",344.23,0.1,9000,1.0],["c",353.23,"Rest"],["b",353.23,0,1500,0.1],["c",356.63,""],["p",356.63,"Feel the vibration settling. Notice what has softened."],["c",370.96,""],["b",370.96,0,2500,0.0],["p",370.96,""],["s",373.96,3],["b",373.96,0,800,0.0],["p",376.16,"In this stage, we will work on the solar plexus chakra, Manipura, above the navel. Hanuman is the deity here. Let the inner fire, Agni, burn away powerlessness and people-pleasing."],["p",395.86,"Next, we will chant Rum, the seed mantra of the solar plexus chakra, three times."],["p",406.46,"Lightly roll the R against the roof of your mouth. Engage your diaphragm, and project a firmer breath, sending warmth into your upper belly."],["p",421.71,"Now, chant along with me."],["p",425.31,"Chant RAM  \u00b7  say \u201cRum\u201d"],["c",426.51,"Breathe in"],["b",426.51,1,4200,0.0],["c",430.71,"RAM  1 of 3"],["b",430.71,0.1,9000,1.0],["c",439.71,"Rest"],["b",439.71,0,1500,0.1],["c",442.71,"Breathe in"],["b",442.71,1,4200,0.0],["c",446.91,"RAM  2 of 3"],["b",446.91,0.1,9000,1.0],["c",455.91,"Rest"],["b",455.91,0,1500,0.1],["c",458.91,"Breathe in"],["b",458.91,1,4200,0.0],["c",463.11,"RAM  3 of 3"],["b",463.11,0.1,9000,1.0],["c",472.11,"Rest"],["b",472.11,0,1500,0.1],["c",475.51,""],["p",475.51,"Feel the vibration settling. Notice what has softened."],["c",489.84,""],["b",489.84,0,2500,0.0],["p",489.84,""],["s",492.84,4],["b",492.84,0,800,0.0],["p",495.04,"In this stage, we will work on the heart chakra, Anahata, at the center of the chest. Ram and Sita are the deities here. Let grief, hurt, and resentment dissolve through forgiveness."],["p",513.57,"Next, we will chant Yum, the seed mantra of the heart chakra, three times."],["p",523.1,"Keep the chest open and relaxed. Let the Y glide gently. Focus on softness rather than volume, and let the sound radiate outward from the heart."],["p",540.28,"Now, chant along with me."],["p",543.89,"Chant YAM  \u00b7  say \u201cYum\u201d"],["c",545.09,"Breathe in"],["b",545.09,1,4200,0.0],["c",549.29,"YAM  1 of 3"],["b",549.29,0.1,9000,1.0],["c",558.29,"Rest"],["b",558.29,0,1500,0.1],["c",561.29,"Breathe in"],["b",561.29,1,4200,0.0],["c",565.49,"YAM  2 of 3"],["b",565.49,0.1,9000,1.0],["c",574.49,"Rest"],["b",574.49,0,1500,0.1],["c",577.49,"Breathe in"],["b",577.49,1,4200,0.0],["c",581.69,"YAM  3 of 3"],["b",581.69,0.1,9000,1.0],["c",590.69,"Rest"],["b",590.69,0,1500,0.1],["c",594.09,""],["p",594.09,"Feel the vibration settling. Notice what has softened."],["c",608.42,""],["b",608.42,0,2500,0.0],["p",608.42,""],["s",611.42,5],["b",611.42,0,800,0.0],["p",613.62,"In this stage, we will work on the throat chakra, Vishuddha, at the base of the throat. Saraswati is the deity here. Release suppressed self-expression, and the fear of being judged."],["p",631.93,"Next, we will chant Hum, the seed mantra of the throat chakra, three times."],["p",641.59,"Begin with a gentle, audible sigh on the H sound, to release tension in the throat. Then flow into the full chant."],["p",655.3,"Now, chant along with me."],["p",658.91,"Chant HAM  \u00b7  say \u201cHum\u201d"],["c",660.11,"Breathe in"],["b",660.11,1,4200,0.0],["c",664.31,"HAM  1 of 3"],["b",664.31,0.1,9000,1.0],["c",673.31,"Rest"],["b",673.31,0,1500,0.1],["c",676.31,"Breathe in"],["b",676.31,1,4200,0.0],["c",680.51,"HAM  2 of 3"],["b",680.51,0.1,9000,1.0],["c",689.51,"Rest"],["b",689.51,0,1500,0.1],["c",692.51,"Breathe in"],["b",692.51,1,4200,0.0],["c",696.71,"HAM  3 of 3"],["b",696.71,0.1,9000,1.0],["c",705.71,"Rest"],["b",705.71,0,1500,0.1],["c",709.11,""],["p",709.11,"Feel the vibration settling. Notice what has softened."],["c",723.44,""],["b",723.44,0,2500,0.0],["p",723.44,""],["s",726.44,6],["b",726.44,0,800,0.0],["p",728.64,"In this stage, we will work on the third eye chakra, Ajna, between the eyebrows. Ardhanarishvara, half Shiva and half Shakti, is the deity here. Awareness and action become one, and clarity arrives."],["p",749.17,"Next, we will chant Aum, the sound of ah, oo, mm, which is the seed mantra of the third eye chakra. Three times."],["p",763.51,"Feel the sound travel upward through your system. A vibrates in the belly. U rises through the chest and throat. M resonates in the head."],["p",779.63,"Now, chant along with me."],["p",783.24,"Chant AUM  \u00b7  say \u201cAh, oo, mm\u201d"],["c",784.44,"Breathe in"],["b",784.44,1,4200,0.0],["c",788.64,"AUM  1 of 3"],["b",788.64,0.1,11000,1.0],["c",799.64,"Rest"],["b",799.64,0,1500,0.1],["c",802.64,"Breathe in"],["b",802.64,1,4200,0.0],["c",806.84,"AUM  2 of 3"],["b",806.84,0.1,11000,1.0],["c",817.84,"Rest"],["b",817.84,0,1500,0.1],["c",820.84,"Breathe in"],["b",820.84,1,4200,0.0],["c",825.04,"AUM  3 of 3"],["b",825.04,0.1,11000,1.0],["c",836.04,"Rest"],["b",836.04,0,1500,0.1],["c",839.44,""],["p",839.44,"Feel the vibration settling. Notice what has softened."],["c",853.77,""],["b",853.77,0,2500,0.0],["p",853.77,""],["s",856.77,7],["b",856.77,0,800,0.0],["p",858.97,"In this stage, we will work on the crown chakra, Sahasrara, at the top of the head. This is pure Shiva. Remaining karma dissolves here, through surrender into silence."],["p",876.68,"Finally, we will chant Om, once, ending in a nasal ong sound. This is the seed mantra of the crown chakra."],["p",889.9,"Instead of closing your lips on an M, finish with a nasal N G sound, as in the word song. Let the vibration strike the top of your head, and dissolve directly into silence."],["p",908.69,"Now, chant Om once, along with me."],["p",913.19,"Chant OM  \u00b7  say \u201cOng\u201d"],["c",914.39,"Breathe in"],["b",914.39,1,4200,0.0],["c",918.59,"OM"],["b",918.59,0.1,12000,1.0],["c",930.59,"Rest"],["b",930.59,0,1500,0.1],["c",933.99,""],["p",933.99,"Let go of the sound. Rest in the silence. There is nothing to do."],["c",973.94,""],["b",973.94,0,2500,0.0],["p",973.94,""],["s",976.94,8],["b",976.94,0,800,0.0],["p",976.94,"Bring your hands together in prayer at your heart."],["p",986.44,"Thank the universe for every lesson, as wisdom. Choose to leave the pain behind."],["p",999.61,"Ask sincere forgiveness from anyone you have hurt, consciously or unconsciously, across lifetimes. And forgive yourself, as a human bound to make mistakes."],["p",1019.26,"Wish peace to others, and to yourself. May peace be with you. May peace be with me. So be it, and so it is."],["p",1035.58,"Take one final deep breath."],["c",1040.22,"Breathe in"],["b",1040.22,1,4000,0.0],["c",1044.22,"Breathe out"],["b",1044.22,0,6500,1.0],["c",1050.72,""],["p",1053.22,"Now rest in the stillness for a moment. Notice how you feel. Notice the calm, the lightness, and the ease that has settled into your body and mind."],["p",1072.95,"Slowly begin to bring your awareness back. Feel the weight of your body, and the surface beneath you. Gently move your fingers and your toes."],["p",1091.16,"Listen to the sounds around you, and become aware of the space you are in. Carry this peace with you into your day."],["p",1107.12,"When you are ready, slowly open your eyes. Namaste."],["p",1119.52,"Namaste."],["e",1128.52]]};
+
+  var STAGES = [{ kind:"prep", name:"Preparation", sub:"Posture, breath and awareness", color:"#e3b96a" }]
+    .concat(CH.map(function (c, i) { return { kind:"chakra", i:i, name:c.name, sub:c.sa + " · " + c.place, color:c.color }; }))
+    .concat([{ kind:"close", name:"Closing prayer", sub:"Gratitude, forgiveness, peace", color:"#e3b96a" }]);
+
+  var $ = function (id) { return document.getElementById(id); };
+  var elTitle=$("title"), elSub=$("sub"), elCue=$("cue"), elCap=$("caption"), elSym=$("sym"), elRom=$("rom"), elDots=$("dots"), elBar=$("barfill"), elTime=$("time");
+  var audio = $("player"), root = document.documentElement;
+
+  var path = $("path");
+  CH.forEach(function (c) {
+    var r = document.createElement("div");
+    r.className = "row"; r.style.setProperty("--dc", c.color);
+    r.innerHTML = '<span class="sw"></span><div><div class="nm">' + c.name + ' · ' + c.sa + '</div><div class="ds">' + c.place + '. ' + c.deity + ' releases ' + c.release + '.</div></div><div class="mt">' + c.mantra + '<small>say "' + c.say + '"</small></div>';
+    path.appendChild(r);
+  });
+
+  /* ---------- Timeline ---------- */
+  var stageT = [], bev = [], cev = [], pev = [];
+  EV.ev.forEach(function (e) {
+    if (e[0] === "s") stageT[e[2]] = e[1];
+    else if (e[0] === "b") bev.push(e);
+    else if (e[0] === "c") cev.push(e);
+    else if (e[0] === "p") pev.push(e);
+  });
+  function lastAt(list, t) { var r = null; for (var i = 0; i < list.length; i++) { if (list[i][1] <= t) r = list[i]; else break; } return r; }
+  function stageAt(t) { var s = 0; for (var i = 0; i < stageT.length; i++) if (stageT[i] <= t) s = i; return s; }
+  function breathAt(t) {
+    var e = lastAt(bev, t); if (!e) return 0;
+    var k = Math.min(1, Math.max(0, (t - e[1]) / (e[3] / 1000))); k = k * k * (3 - 2 * k);
+    return e[4] + (e[2] - e[4]) * k;
+  }
+  function fmt(s) { s = Math.max(0, Math.floor(s)); return ("0" + Math.floor(s / 60)).slice(-2) + ":" + ("0" + (s % 60)).slice(-2); }
+
+  /* ---------- View state ---------- */
+  var running = false, finished = false, curStage = -1, curIdx = -1, curColor = "#e3b96a", lastCue = null, lastCap = null;
+  function dotsInit() {
+    STAGES.forEach(function (s, i) {
+      var d = document.createElement("button");
+      d.type = "button"; d.className = "dot" + (s.kind === "chakra" ? "" : " small");
+      d.style.setProperty("--dc", s.color); d.setAttribute("aria-label", s.name);
+      d.addEventListener("click", function () { if (running) seekStage(i); });
+      elDots.appendChild(d);
+    });
+  }
+  dotsInit();
+  function setStage(i) {
+    curStage = i; var s = STAGES[i];
+    elTitle.textContent = s.name; elSub.textContent = s.sub;
+    root.style.setProperty("--c", s.color); curColor = s.color;
+    Array.prototype.forEach.call(elDots.children, function (d, k) { d.className = "dot" + (STAGES[k].kind === "chakra" ? "" : " small") + (k < i ? " done" : k === i ? " on" : ""); });
+    if (s.kind === "chakra") { curIdx = s.i; elSym.textContent = CH[s.i].sym; elRom.textContent = CH[s.i].mantra; }
+    else { curIdx = -1; elSym.textContent = "ॐ"; elRom.textContent = ""; }
+  }
+  function update() {
+    var t = audio.currentTime || 0;
+    var si = stageAt(t); if (si !== curStage) setStage(si);
+    var c = lastAt(cev, t), ct = c ? c[2] : ""; if (ct !== lastCue) { lastCue = ct; elCue.textContent = ct; }
+    var p = lastAt(pev, t), pt = p ? p[2] : ""; if (pt !== lastCap) { lastCap = pt; elCap.textContent = pt; }
+    elBar.style.width = Math.min(100, t / EV.end * 100) + "%";
+    elTime.textContent = fmt(t) + " / " + fmt(EV.end);
+  }
+  function seekStage(i) { i = Math.max(0, Math.min(STAGES.length - 1, i)); audio.currentTime = i ? stageT[i] : 0; if (audio.paused && running && !finished) audio.play().catch(function () {}); update(); }
+
+  /* ---------- Controls ---------- */
+  var wake = null;
+  function lockOn() { try { if (navigator.wakeLock) navigator.wakeLock.request("screen").then(function (w) { wake = w; }).catch(function () {}); } catch (e) {} }
+  function lockOff() { try { if (wake) { wake.release(); wake = null; } } catch (e) {} }
+  function showSession(on) {
+    $("session").classList.toggle("hidden", !on); $("idle").classList.toggle("hidden", on);
+    $("hero").classList.toggle("hidden", on); $("path").classList.toggle("hidden", on);
+  }
+  function startPlay(from) {
+    finished = false; running = true; showSession(true);
+    $("pause").classList.remove("hidden"); $("skip").classList.remove("hidden"); $("end").textContent = "End";
+    audio.currentTime = from || 0; lastCue = lastCap = null; curStage = -1;
+    var pr = audio.play(); if (pr && pr.catch) pr.catch(function () { elCap.textContent = "Tap Resume to start the audio."; $("pause").textContent = "Resume"; });
+    window.scrollTo({ top: 0, behavior: "smooth" }); update();
+  }
+  $("start").addEventListener("click", function () { startPlay(0); });
+  $("pause").addEventListener("click", function () { if (audio.paused) audio.play().catch(function () {}); else audio.pause(); });
+  $("skip").addEventListener("click", function () { if (running) seekStage(curStage + 1); });
+  $("end").addEventListener("click", function () {
+    if (finished) { startPlay(0); return; }
+    audio.pause(); audio.currentTime = 0; running = false; lockOff(); curIdx = -1; curStage = -1;
+    root.style.setProperty("--c", "#e3b96a"); curColor = "#e3b96a"; elSym.textContent = "ॐ"; elRom.textContent = "";
+    showSession(false);
+  });
+  audio.addEventListener("play", function () { $("pause").textContent = "Pause"; lockOn(); });
+  audio.addEventListener("pause", function () { if (!audio.ended) $("pause").textContent = "Resume"; lockOff(); });
+  audio.addEventListener("waiting", function () { elSub.textContent = "Loading audio…"; });
+  audio.addEventListener("playing", function () { if (curStage >= 0) elSub.textContent = STAGES[curStage].sub; });
+  audio.addEventListener("ended", function () {
+    finished = true; lockOff(); curIdx = -1; update();
+    elCue.textContent = ""; elTitle.textContent = "Practice complete"; elSub.textContent = "Sit quietly for as long as you like.";
+    elCap.textContent = "Return whenever you want to clear what you are carrying.";
+    root.style.setProperty("--c", "#e3b96a"); curColor = "#e3b96a";
+    $("pause").classList.add("hidden"); $("skip").classList.add("hidden"); $("end").textContent = "Start again";
+    Array.prototype.forEach.call(elDots.children, function (d) { d.className = d.className.replace(" on", "") + " done"; });
+  });
+  // lock screen / notification controls
+  try {
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: "Karma Healing Meditation", artist: "Seven chakras, base to crown", album: "Guided chant meditation" });
+      navigator.mediaSession.setActionHandler("play", function () { audio.play(); });
+      navigator.mediaSession.setActionHandler("pause", function () { audio.pause(); });
+      navigator.mediaSession.setActionHandler("seekto", function (d) { if (d && d.seekTime != null) audio.currentTime = d.seekTime; });
+      navigator.mediaSession.setActionHandler("nexttrack", function () { seekStage(curStage + 1); });
+      navigator.mediaSession.setActionHandler("previoustrack", function () { seekStage(curStage - 1); });
+    }
+  } catch (e) {}
+  setInterval(function () {
+    try { if ("mediaSession" in navigator && audio.duration) navigator.mediaSession.setPositionState({ duration: audio.duration, playbackRate: 1, position: Math.min(audio.currentTime, audio.duration) }); } catch (e) {}
+    if (running && document.hidden === false) update();
+  }, 1000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && running) { update(); if (!audio.paused) lockOn(); } });
+
+  /* ---------- Visuals ---------- */
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var cv = $("mandala"), g = cv.getContext("2d"), sc = $("stars"), sg = sc.getContext("2d"), stars = [];
+  function fit() {
+    var d = Math.min(window.devicePixelRatio || 1, 2), r = cv.getBoundingClientRect();
+    cv.width = Math.max(1, r.width * d); cv.height = Math.max(1, r.height * d);
+    sc.width = innerWidth * d; sc.height = innerHeight * d;
+    stars = []; for (var i = 0; i < 70; i++) stars.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.3 + .3, p: Math.random() * 6.28 });
+  }
+  addEventListener("resize", fit); fit();
+
+  function hexA(h, a) { var n = parseInt(h.slice(1), 16); return "rgba(" + (n >> 16) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + a + ")"; }
+  function petals(cx, cy, n, r0, r1, col, a, rot, wid) {
+    g.save(); g.translate(cx, cy); g.rotate(rot);
+    for (var k = 0; k < n; k++) {
+      g.save(); g.rotate(k * Math.PI * 2 / n);
+      g.beginPath(); g.moveTo(0, -r0);
+      var w = Math.min(wid, (Math.PI * r1 / n) * 1.15);
+      g.bezierCurveTo(w, -r0 - (r1 - r0) * .3, w * .8, -r1 * .9, 0, -r1);
+      g.bezierCurveTo(-w * .8, -r1 * .9, -w, -r0 - (r1 - r0) * .3, 0, -r0);
+      g.fillStyle = hexA(col, a * .22); g.fill(); g.strokeStyle = hexA(col, a); g.lineWidth = 1.2 * (cv.width / 440); g.stroke();
+      g.restore();
+    }
+    g.restore();
+  }
+  function draw(ts) {
+    var w = cv.width, h = cv.height, cx = w / 2, cy = h / 2, R = Math.min(w, h) / 2, time = reduce ? 0 : ts / 1000;
+    g.clearRect(0, 0, w, h);
+    var b = running ? breathAt(audio.currentTime || 0) : 0.4 + 0.3 * Math.sin(time * 0.65), s = 0.9 + 0.1 * b;
+    // glow
+    var col = curIdx >= 0 ? CH[curIdx].color : "#e3b96a";
+    var gr = g.createRadialGradient(cx, cy, 0, cx, cy, R * .95);
+    gr.addColorStop(0, hexA(col, .22 + .25 * b)); gr.addColorStop(.6, hexA(col, .05 + .06 * b)); gr.addColorStop(1, hexA(col, 0));
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    // rings
+    g.lineWidth = 1.2 * (w / 440);
+    [.97, .86].forEach(function (k, i) { g.beginPath(); g.arc(cx, cy, R * k * (i ? s : 1), 0, 7); g.strokeStyle = hexA("#e3b96a", i ? .16 : .26); g.stroke(); });
+    // seven stations
+    CH.forEach(function (c, i) {
+      var ang = -Math.PI / 2 + i * Math.PI * 2 / 7 + time * .02, x = cx + Math.cos(ang) * R * .97, y = cy + Math.sin(ang) * R * .97, on = i === curIdx;
+      g.beginPath(); g.arc(x, y, (on ? 8 : 4.5) * (w / 440), 0, 7); g.fillStyle = hexA(c.color, on ? 1 : .55); g.fill();
+      if (on) { g.beginPath(); g.arc(x, y, 15 * (w / 440), 0, 7); g.strokeStyle = hexA(c.color, .5); g.stroke(); }
+    });
+    // petals
+    if (curIdx >= 0) {
+      var c = CH[curIdx], n = c.petals;
+      petals(cx, cy, n, R * .24, R * .78 * s, c.color, .75, time * .06, R * .2);
+      petals(cx, cy, n, R * .24, R * .56 * s, c.color, .5, -time * .09 + Math.PI / n, R * .14);
+    } else {
+      CH.forEach(function (c, i) {
+        petals(cx, cy, Math.min(c.petals, 16) + (c.petals === 2 ? 6 : 0), R * (.2 + i * .02), R * (.34 + i * .07) * s, c.color, .5, time * (.03 + i * .01) * (i % 2 ? -1 : 1), R * .16);
+      });
+    }
+    g.beginPath(); g.arc(cx, cy, R * .22, 0, 7); g.strokeStyle = hexA(col, .6); g.stroke();
+    // stars
+    var sw = sc.width, sh = sc.height; sg.clearRect(0, 0, sw, sh);
+    stars.forEach(function (st) { var a = .25 + .25 * Math.sin(time * .6 + st.p); sg.beginPath(); sg.arc(st.x * sw, st.y * sh, st.r, 0, 7); sg.fillStyle = "rgba(241,235,220," + a + ")"; sg.fill(); });
+    if (running) update();
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+</script>
+<script>
+if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); }); }
+</script>
+</body>
+</html>
